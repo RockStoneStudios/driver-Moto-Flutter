@@ -1,16 +1,14 @@
 import 'package:driversapp/authentication/login_screen.dart';
 import 'package:driversapp/global/global_var.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_geofire/flutter_geofire.dart';
-import 'package:restart_app/restart_app.dart';
+import '../service/firebase_service.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+  const ProfilePage({Key? key}) : super(key: key);
 
   @override
-  State<ProfilePage> createState() => _ProfilePageState();
+  _ProfilePageState createState() => _ProfilePageState();
 }
 
 class _ProfilePageState extends State<ProfilePage> {
@@ -19,24 +17,25 @@ class _ProfilePageState extends State<ProfilePage> {
   TextEditingController emailTextEditingController = TextEditingController();
   TextEditingController carTextEditingController = TextEditingController();
 
-  setDriverInfo() {
-    setState(() {
-      nameTextEditingController.text = driverName;
-      phoneTextEditingController.text = driverPhone;
-      emailTextEditingController.text =
-          FirebaseAuth.instance.currentUser!.email.toString();
-      carTextEditingController.text =
-          carNumber + " - " + carColor + " - " + carModel;
-    });
-  }
-
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-
-    setDriverInfo();
+    _loadDriverInfo();
   }
+
+  _loadDriverInfo() async {
+    var driverDetails = await FirebaseService().getDriverDetails();
+    if (driverDetails != null) {
+      setState(() {
+        nameTextEditingController.text = driverDetails['name'] ?? '';
+        phoneTextEditingController.text = driverDetails['phone'] ?? '';
+        emailTextEditingController.text = driverDetails['email'] ?? '';
+        carTextEditingController.text = "${driverDetails['car_details']['carNumber']} - ${driverDetails['car_details']['carColor']} - ${driverDetails['car_details']['carModel']}";
+        driverPhoto = driverDetails['photo'] ?? '';
+      });
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {

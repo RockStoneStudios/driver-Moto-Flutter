@@ -1,13 +1,7 @@
 import 'dart:io';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:driversapp/pages/dashboard.dart';
 
 import 'package:firebase_database/firebase_database.dart';
-// import 'package:flutter/material.dart';
-// import 'package:users_app/authentication/login_screen.dart';
-// import 'package:users_app/methods/common_methods.dart';
-// import 'package:users_app/pages/home_page.dart';
-// import 'package:users_app/widgets/loading_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -52,16 +46,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   uploadImageToStorage() async {
-    String imageIDName = DateTime.now().millisecondsSinceEpoch.toString();
-    Reference referenceImage =
-        FirebaseStorage.instance.ref().child('Images').child(imageIDName);
+    String fileExtension = imageFile!.path.split('.').last;
+
+    String imageIDName = "${DateTime.now().millisecondsSinceEpoch.toString()}.$fileExtension";
+
+    Reference referenceImage = FirebaseStorage.instance.ref().child('Images').child(imageIDName);
+
     UploadTask uploadTask = referenceImage.putFile(File(imageFile!.path));
     TaskSnapshot snapshot = await uploadTask;
+
     urlOfUploadedImage = await snapshot.ref.getDownloadURL();
 
     setState(() {
       urlOfUploadedImage;
     });
+
     registerNewDriver();
   }
 

@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:driversapp/methods/map_theme_methods.dart';
 import 'package:driversapp/pushNotification/push_notification_system.dart';

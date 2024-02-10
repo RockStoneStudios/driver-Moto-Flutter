@@ -504,7 +504,7 @@ class _NewTripPageState extends State<NewTripPage> {
                         ),
                         Expanded(
                           child: Text(
-                            widget.newTripDetailsInfo!.pickupAddress.toString(),
+                            widget.newTripDetailsInfo!.pickUpLatLng.toString(),
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontSize: 18,

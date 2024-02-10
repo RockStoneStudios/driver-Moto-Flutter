@@ -6,16 +6,13 @@ import 'package:driversapp/pages/new_trip_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'loading_dialogs.dart';
 
 class NotificationDialog extends StatefulWidget {
-  TripDetails? tripDetailsInfo;
+  final TripDetails? tripDetailsInfo;
 
-  NotificationDialog({
-    super.key,
-    this.tripDetailsInfo,
-  });
+  NotificationDialog({Key? key, this.tripDetailsInfo}) : super(key: key);
 
   @override
   State<NotificationDialog> createState() => _NotificationDialogState();
@@ -25,9 +22,15 @@ class _NotificationDialogState extends State<NotificationDialog> {
   String tripRequestStatus = "";
   CommonMethods cMethods = CommonMethods();
 
+  @override
+  void initState() {
+    super.initState();
+    print("NotificationDialog PickupAddress: ${widget.tripDetailsInfo?.pickUpLatLng}");
+    cancelNotificationDialogAfter20Sec();
+  }
+
   cancelNotificationDialogAfter20Sec() {
     const oneTickPerSecond = Duration(seconds: 1);
-
     var timerCountDown = Timer.periodic(oneTickPerSecond, (timer) {
       driverTripRequestTimeout = driverTripRequestTimeout - 1;
 
@@ -45,32 +48,18 @@ class _NotificationDialogState extends State<NotificationDialog> {
     });
   }
 
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-
-    cancelNotificationDialogAfter20Sec();
-  }
-
   checkAvailabilityOfTripRequest(BuildContext context) async {
     showDialog(
       barrierDismissible: false,
       context: context,
-      builder: (BuildContext context) => LoadingDialog(
-        messageText: 'please wait...',
-      ),
+      builder: (BuildContext context) => LoadingDialog(messageText: 'Please wait...'),
     );
 
-    DatabaseReference driverTripStatusRef = FirebaseDatabase.instance
-        .ref()
-        .child("drivers")
-        .child(FirebaseAuth.instance.currentUser!.uid)
-        .child("newTripStatus");
+    DatabaseReference driverTripStatusRef = FirebaseDatabase.instance.ref().child("drivers").child(FirebaseAuth.instance.currentUser!.uid).child("newTripStatus");
 
     await driverTripStatusRef.once().then((snap) {
-      Navigator.pop(context);
-      Navigator.pop(context);
+      Navigator.pop(context); // Cierra el LoadingDialog
+      Navigator.pop(context); // Cierra el NotificationDialog
 
       String newTripStatusValue = "";
       if (snap.snapshot.value != null) {
@@ -82,17 +71,13 @@ class _NotificationDialogState extends State<NotificationDialog> {
       if (newTripStatusValue == widget.tripDetailsInfo!.tripID) {
         driverTripStatusRef.set("accepted");
 
-        //disable homepage location updates
+        // Disable homepage location updates
         cMethods.turnOffLocationUpdatesForHomePage();
 
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (c) =>
-                    NewTripPage(newTripDetailsInfo: widget.tripDetailsInfo)));
+        // Navega a la página del nuevo viaje
+        Navigator.push(context, MaterialPageRoute(builder: (c) => NewTripPage(newTripDetailsInfo: widget.tripDetailsInfo)));
       } else if (newTripStatusValue == "cancelled") {
-        cMethods.displaySnackBar(
-            "Trip Request has been Cancelled by user.", context);
+        cMethods.displaySnackBar("Trip Request has been Cancelled by user.", context);
       } else if (newTripStatusValue == "timeout") {
         cMethods.displaySnackBar("Trip Request timed out.", context);
       } else {
@@ -101,7 +86,7 @@ class _NotificationDialogState extends State<NotificationDialog> {
     });
   }
 
-  @override
+@override
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(
@@ -174,7 +159,7 @@ class _NotificationDialogState extends State<NotificationDialog> {
                       ),
                       Expanded(
                         child: Text(
-                          widget.tripDetailsInfo!.pickupAddress.toString(),
+                          widget.tripDetailsInfo!.pickUpLatLng.toString(),
                           overflow: TextOverflow.ellipsis,
                           maxLines: 2,
                           style: const TextStyle(
